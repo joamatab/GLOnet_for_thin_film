@@ -12,11 +12,7 @@ class GLOnet():
     def __init__(self, params):
         # GPU 
         self.cuda = torch.cuda.is_available()
-        if self.cuda:
-            self.dtype = torch.cuda.FloatTensor
-        else:
-            self.dtype = torch.FloatTensor
-            
+        self.dtype = torch.cuda.FloatTensor if self.cuda else torch.FloatTensor
         # construct
         if params.net == 'NF':
             self.generator = GeneratorNF(params)
@@ -24,12 +20,12 @@ class GLOnet():
             self.generator = ResGenerator(params)
         else:
             self.generator = Generator(params)
-        
+
         if self.cuda: 
             self.generator.cuda()
         self.optimizer = torch.optim.Adam(self.generator.parameters(), lr=params.lr, betas = (params.beta1, params.beta2))
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size = params.step_size, gamma = params.step_size)
-        
+
         # training parameters
         self.is_robust = params.is_robust
         self.robust_coeff = params.robust_coeff
@@ -40,7 +36,7 @@ class GLOnet():
         self.alpha_sup = params.alpha_sup
         self.iter0 = 0
         self.alpha = 0.1
-    
+
         # simulation parameters
         self.user_define = params.user_define
         if params.user_define:
@@ -54,9 +50,9 @@ class GLOnet():
         self.k = params.k.type(self.dtype)  # number of frequencies
         self.theta = params.theta.type(self.dtype) # number of angles
         self.pol = params.pol # str of pol
-        self.target_reflection = params.target_reflection.type(self.dtype) 
+        self.target_reflection = params.target_reflection.type(self.dtype)
         # 1 x number of frequencies x number of angles x (number of pol or 1)
-        
+
         # tranining history
         self.loss_training = []
         self.refractive_indices_training = []
@@ -126,19 +122,24 @@ class GLOnet():
         result_mat = torch.argmax(P, dim=2).detach() # batch size x number of layer
 
         if not grayscale:
-            if self.user_define:
-                n_database = self.n_database # do not support dispersion
-            else:
-                n_database = self.matdatabase.interp_wv(2 * math.pi/kvector, self.materials, True).unsqueeze(0).unsqueeze(0).type(self.dtype)
-            
+            n_database = (
+                self.n_database
+                if self.user_define
+                else self.matdatabase.interp_wv(
+                    2 * math.pi / kvector, self.materials, True
+                )
+                .unsqueeze(0)
+                .unsqueeze(0)
+                .type(self.dtype)
+            )
+
             one_hot = torch.eye(len(self.materials)).type(self.dtype)
             ref_idx = torch.sum(one_hot[result_mat].unsqueeze(-1) * n_database, dim=2)
+        elif self.user_define:
+            ref_idx = refractive_indices
         else:
-            if self.user_define:
-                ref_idx = refractive_indices
-            else:
-                n_database = self.matdatabase.interp_wv(2 * math.pi/kvector, self.materials, True).unsqueeze(0).unsqueeze(0).type(self.dtype)
-                ref_idx = torch.sum(P.unsqueeze(-1) * n_database, dim=2)
+            n_database = self.matdatabase.interp_wv(2 * math.pi/kvector, self.materials, True).unsqueeze(0).unsqueeze(0).type(self.dtype)
+            ref_idx = torch.sum(P.unsqueeze(-1) * n_database, dim=2)
 
         reflection = TMM_solver(thicknesses, ref_idx, self.n_bot, self.n_top, kvector.type(self.dtype), inc_angles.type(self.dtype), pol)
         return (thicknesses, ref_idx, result_mat, reflection)

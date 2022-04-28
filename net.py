@@ -89,7 +89,7 @@ class ResGenerator(nn.Module):
         self.N_layers = params.N_layers
         self.M_materials = params.M_materials
         self.n_database = params.n_database.view(1, 1, params.M_materials, -1).cuda() # 1 x 1 x number of mat x number of freq
-        
+
         self.initBLOCK = nn.Sequential(
             nn.Linear(self.noise_dim, self.res_dim),
             nn.LeakyReLU(0.2),
@@ -102,7 +102,7 @@ class ResGenerator(nn.Module):
         )
 
         self.ResBLOCK = nn.ModuleList()
-        for i in range(params.res_layers):
+        for _ in range(params.res_layers):
             self.ResBLOCK.append(ResBlock(self.res_dim))
 
         self.FC_thickness = nn.Sequential(
@@ -141,8 +141,9 @@ class Planar_flow(nn.Module):
 
     def u_hat_cal(self):
         w_dot_u = torch.mm(self.u, self.w.t()).view(())
-        u_hat = self.u + (self.m(w_dot_u) - w_dot_u) * self.w/torch.pow(torch.norm(self.w),1)
-        return u_hat
+        return self.u + (self.m(w_dot_u) - w_dot_u) * self.w / torch.pow(
+            torch.norm(self.w), 1
+        )
 
     def forward(self, z):
         u = self.u_hat_cal()

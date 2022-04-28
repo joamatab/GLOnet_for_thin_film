@@ -172,15 +172,14 @@ def TMM_solver(thicknesses, refractive_indices, n_bot, n_top, k, theta, pol = 'T
 
     # transfer matrix calculation
     T_stack = transfer_matrix_stack(thicknesses, refractive_indices, k, ky, pol)
-    
+
     # amplitude to field convertion
     A2F_bot = amp2field(n_bot, k, ky, pol)
     A2F_top = amp2field(n_top, k, ky, pol)
-    
+
     # S matrix
     S_stack = matrix_mul(matrix_inv(A2F_top), matrix_mul(T_stack, A2F_bot))
-    
-    # reflection 
-    Reflection = torch.pow(complex_abs(S_stack[2]), 2) / torch.pow(complex_abs(S_stack[3]), 2)
-            
-    return Reflection
+
+    return torch.pow(complex_abs(S_stack[2]), 2) / torch.pow(
+        complex_abs(S_stack[3]), 2
+    )
