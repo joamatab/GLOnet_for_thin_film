@@ -104,7 +104,7 @@ def save_checkpoint(state, checkpoint):
     """
     filepath = os.path.join(checkpoint, 'model.pth.tar')
     if not os.path.exists(checkpoint):
-        print("Checkpoint Directory does not exist! Making directory {}".format(checkpoint))
+        print(f"Checkpoint Directory does not exist! Making directory {checkpoint}")
         os.mkdir(checkpoint)
     else:
         print("Checkpoint Directory exists! ")
@@ -121,7 +121,7 @@ def load_checkpoint(checkpoint, model, optimizer=None, scheduler=None):
         optimizer: (torch.optim) optional: resume optimizer from checkpoint
     """
     if not os.path.exists(checkpoint):
-        raise("File doesn't exist {}".format(checkpoint))
+        raise f"File doesn't exist {checkpoint}"
     checkpoint = torch.load(checkpoint)
 
     model.load_state_dict(checkpoint['gen_state_dict'])
@@ -146,7 +146,7 @@ def plot_loss_history(loss_history, params):
         plt.xlabel('iteration')
         plt.legend(('Average Efficiency', 'Pattern diversity', 'Binarizaion'))
         plt.axis([0, len(effs_mean_history)*params.plot_iter, 0, 1.05])
-        plt.savefig(params.output_dir + '/figures/Train_history.png')
+        plt.savefig(f'{params.output_dir}/figures/Train_history.png')
 
         history_path = os.path.join(params.output_dir,'history.mat')
         io.savemat(history_path, mdict={'effs_mean_history':np.asarray(effs_mean_history), 
@@ -164,7 +164,7 @@ def plot_loss_history(loss_history, params):
         plt.legend(('Average compliance', '90th percentile'))
 
         #plt.axis([0, len(effs_mean_history)*params.plot_iter, 0, 1.05])
-        plt.savefig(params.output_dir + '/figures/effs_history.png')
+        plt.savefig(f'{params.output_dir}/figures/effs_history.png')
         plt.close()
 
         plt.figure()
@@ -173,7 +173,7 @@ def plot_loss_history(loss_history, params):
         plt.xlabel('iteration')
         plt.legend(('Pattern diversity', 'Binarizaion'))
         plt.axis([0, len(effs_mean_history)*params.plot_iter, 0, 1.05])
-        plt.savefig(params.output_dir + '/figures/Pattern_history.png')
+        plt.savefig(f'{params.output_dir}/figures/Pattern_history.png')
 
         history_path = os.path.join(params.output_dir,'history.mat')
         io.savemat(history_path, mdict={'effs_90th_history':np.asarray(effs_90th_history),
@@ -190,18 +190,18 @@ def plot_scatter(imgs, effs, Iter, fig_path):
     plt.xlim(-10, 10)
     plt.ylim(-10, 10)
     plt.yticks([])
-    plt.xticks([])    
+    plt.xticks([])
     #plt.xticks(fontsize=20)
     #plt.yticks(fontsize=20)
-    plt.title('Iteration {}'.format(Iter), fontsize=16)
+    plt.title(f'Iteration {Iter}', fontsize=16)
     plt.savefig(fig_path, dpi=300)
     plt.close()
 
 
 def plot_scatter_and_histogram(imgs, effs, Iter, fig_path):
     plt.figure(figsize=(8, 4))
-    gs = gridspec.GridSpec(1, 2, width_ratios=[1.2, 1]) 
-    plt.suptitle('Iteration {}'.format(Iter), fontsize=16)
+    gs = gridspec.GridSpec(1, 2, width_ratios=[1.2, 1])
+    plt.suptitle(f'Iteration {Iter}', fontsize=16)
 
     plt.subplot(gs[0])
     plt.scatter(imgs[:, 0], imgs[:, 1], c = effs*100, cmap=plt.cm.jet, vmin=0, vmax=100)
@@ -211,7 +211,7 @@ def plot_scatter_and_histogram(imgs, effs, Iter, fig_path):
     plt.xlim(-150, 120)
     plt.ylim(-80, 150)
     plt.yticks([])
-    plt.xticks([])    
+    plt.xticks([])
     #plt.xticks(fontsize=20)
     #plt.yticks(fontsize=20)
 
@@ -239,7 +239,7 @@ def plot_histogram(effs, Iter, fig_path):
     plt.xticks(fontsize=12)
     #plt.yticks(fontsize=20)
     plt.xlabel('Deflection efficiency (%)', fontsize=12)
-    plt.title('Iteration {}'.format(Iter), fontsize=16)
+    plt.title(f'Iteration {Iter}', fontsize=16)
     plt.savefig(fig_path, dpi=300)
     plt.close()
 
@@ -291,13 +291,13 @@ def movie_scatter(imgs, effs, output_dir):
 
     fig = plt.figure()
     numFrame = imgs.shape[0]
-    filepath = output_dir + '/scatter.avi'
+    filepath = f'{output_dir}/scatter.avi'
 
     with writer.saving(fig, filepath, numFrame):
         for i in range(numFrame):
             plt.cla()
             plt.scatter(imgs[i, :, 0], imgs[i, :, 1], c = effs[i, :], cmap=plt.cm.plasma)
-            plt.title('Iter {}'.format(i*100+100))
+            plt.title(f'Iter {i*100 + 100}')
             plt.xlim(-15, 15)
             plt.ylim(-15, 15)
             plt.colorbar()
